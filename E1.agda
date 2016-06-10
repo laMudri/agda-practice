@@ -204,7 +204,7 @@ data _×_ (A B : Set) : Set where
 -- EXERCISE: Try it yourself:
 
 ×-exercise₁ : (A : Set) → A × A → A
-×-exercise₁ A p = {!!}
+×-exercise₁ A (x , y) = x
 
 -- Above, the green region is a metavariable, or hole.  These correspond to bits of a
 -- function or type that have yet to be completed.  Agda allows you to construct terms
@@ -241,10 +241,10 @@ data _×_ (A B : Set) : Set where
 -- EXERCISE: try the following:
 
 fst : (A B : Set) → A × B → A
-fst A B p = {!!}
+fst A B (x , _) = x
 
 snd : (A B : Set) → A × B → B
-snd A B p = {!!}
+snd A B (_ , y) = y
 
 -- If 𝟘 corresponds to False, and 𝟙 corresponds to True, can you guess what _×_ corresponds
 -- to?  Recall the inference rules for conjunction from logic:
@@ -301,15 +301,18 @@ data _⊎_ (A B : Set) : Set where
 -- EXERCISE: Complete the following:
 
 ⊎-exercise₁ : (A B : Set) → A ⊎ B → B ⊎ A
-⊎-exercise₁ A B p = {!!}
+⊎-exercise₁ A B (inj₁ x) = inj₂ x
+⊎-exercise₁ A B (inj₂ x) = inj₁ x
 
 ⊎-exercise₂ : (A B C : Set) → (A → C) → (B → C) → A ⊎ B → C
-⊎-exercise₂ A B C l r p = {!!}
+⊎-exercise₂ A B C l r (inj₁ x) = l x
+⊎-exercise₂ A B C l r (inj₂ x) = r x
 
 -- The following is harder and requires a function that has been defined previously:
 
 ⊎-exercise₃ : (A : Set) → 𝟘 ⊎ A → A
-⊎-exercise₃ A p = {!!}
+⊎-exercise₃ A (inj₁ x) = ex-falso A x
+⊎-exercise₃ A (inj₂ x) = x
 
 -- Recall that `ex-falso' allows us to deduce anything if we are handed something of type 𝟘.
 -- In the exercise above, you will eventually come across a proof state similar to
@@ -325,6 +328,10 @@ data _⊎_ (A B : Set) : Set where
  -- Can you guess what logical connective _⊎_ corresponds to?  Write down the inference rules
 -- for that logical connective and see if they match the types of any functions/constructors
 -- above.
+
+--         ⊢ A              ⊢ B            ⊢ A → C    ⊢ B → C    ⊢ A ∨ B
+--      ---------inj₁    ---------inj₂    -------------------------------⊎-exercise₂
+--       ⊢ A ∨ B          ⊢ A ∨ B                        C
 
 -- How many canonical elements does 𝟙 ⊎ 𝟙 have?  To construct a canonical element of 𝟙 ⊎ 𝟙 we
 -- must identify a canonical element of 𝟙 (easy: `it') and use either inj₁ or inj₂ to construct
@@ -343,7 +350,8 @@ data Maybe (A : Set) : Set where
 -- EXERCISE: complete the following:
 
 maybe-exercise₁ : (A : Set) → Maybe A → A → A
-maybe-exercise₁ A m d = {!!}
+maybe-exercise₁ A nothing d = d
+maybe-exercise₁ A (just x) d = x
 
 -- Let's define another familiar type.  If 𝟙 has one canonical element, 𝟘 has zero canonical
 -- elements, then what type has two canonical elements?  The Boolean type:
@@ -362,14 +370,16 @@ data Bool : Set where
 -- EXERCISE: define conjunction.
 
 _∧_ : Bool → Bool → Bool
-p ∧ q = {!!}
+true ∧ q = q
+false ∧ q = false
 
 -- Type \and to obtain the conjunction ∧ Unicode glyph.
   
 -- What other functions can we define on Bool?  What about branching?
 
 if_then_else_ : {A : Set} → Bool → A → A → A
-if test then t else f = {!!}
+if true then t else f = t
+if false then t else f = f
 
 -- Note how if_then_else_ is defined in Agda, whereas in most other programming
 -- languages control structures such as if_then_else_ are built in to the
@@ -417,10 +427,12 @@ false′ = inj₂ it
 
 -- EXERCISE: complete the following:
 if_then_else′_ : {A : Set} → Bool′ → A → A → A
-if test then t else′ f = {!!}
+if inj₁ x then t else′ f = t
+if inj₂ x then t else′ f = f
 
 _∧′_ : Bool′ → Bool′ → Bool′
-p ∧′ q = {!!}
+inj₁ x ∧′ q = q
+inj₂ x ∧′ q = inj₂ x
 
 -- Back to counting elements of types.  If 𝟙 and 𝟘 are base types, _⊎_ adds the number of elements
 -- and _×_ takes the product, what does _→_ do?  Let's see:
