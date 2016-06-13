@@ -8,7 +8,7 @@ module E2 where
   -- complain about `unsolved metas', i.e. there's still bits of the Exercise1 file
   -- that you have not completely refined into complete types or terms.
 
-  -- open import Exercise1
+  open import E1
 
   -- We start by defining a list type.  This should look entirely familiar.
 
@@ -18,7 +18,7 @@ module E2 where
 
   -- Type \:: to obtain the cons ∷ Unicode glyph.
   --
-  -- Unlike the types we defined in List is recursive.  Naturally, then, a lot of the
+  -- Unlike the types we defined in E1, List is recursive.  Naturally, then, a lot of the
   -- functions in this file are also going to be recursive.  One thing that you must
   -- learn quite quickly is that Agda is very picky about recursive functions and
   -- recursive types: a type like List above must be `strictly positive', and any
@@ -45,7 +45,8 @@ module E2 where
   -- EXERCISE: complete the definition of map:
 
   map : {A B : Set} → (A → B) → List A → List B
-  map f xs = {!!}
+  map f [] = []
+  map f (x ∷ xs) = f x ∷ map f xs
 
   -- Agda has a small collection of rather limited automation tools compared to its more
   -- complex brethren like Coq.  However, these automated tools can be used to close
@@ -54,7 +55,7 @@ module E2 where
 
   map′ : {A B : Set} → (A → B) → List A → List B
   map′ f []        = []
-  map′ f (x ∷ xs) = {!!} ∷ {!!}
+  map′ f (x ∷ xs) = f x ∷ map′ f xs
 
   -- Again, there are two holes in the body of the cons case of map′'s definition.  Put your
   -- cursor in the first and bring up the proof state with <Ctrl> + <c> + <,>.  You should
@@ -95,7 +96,8 @@ module E2 where
   -- EXERCISE: complete the following:
 
   reverse : {A : Set} → List A → List A
-  reverse xs = {!!}
+  reverse [] = []
+  reverse (x ∷ xs) = xs ⊕ [ x ]
 
   -- To define the length of a list we need some notion of number.  Note there are no numbers
   -- built in to the language.  We have to define them!
@@ -126,10 +128,12 @@ module E2 where
   -- EXERCISE, complete the following:
 
   _*_ : ℕ → ℕ → ℕ
-  m * n = {!!}
+  zero * n = zero
+  succ m * n = n + (m * n)
 
   -- Using ℕ, We now have enough to define the length of a list:
   -- EXERCISE: complete the following:
 
   length : {A : Set} → List A → ℕ
-  length xs = {!!}
+  length [] = zero
+  length (x ∷ xs) = succ (length xs)
