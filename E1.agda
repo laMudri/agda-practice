@@ -445,3 +445,5 @@ inj₂ x ∧′ q = inj₂ x
 --   𝟙 → Bool is inhabited by   (λ x → true) and (λ x → false)
 --
 --  Which seems to suggest that _→_ corresponds to exponentiation (where 0⁰ = 1).
+
+-- DPM: good!
