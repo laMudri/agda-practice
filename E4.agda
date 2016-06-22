@@ -4,12 +4,10 @@ module E4 where
 
   -- As always, uncomment the following when ready:
   --
-  {-
   open import E1
     renaming (¬_ to ¬Bool_)
   open import E2
   open import E3
-  -}
 
   -- Note how we can rename functions when we import a module.  This is to avoid name
   -- clashes, either with functions from other modules we are importing, or with functions
@@ -154,13 +152,16 @@ module E4 where
   -- EXERCISE: try to close the following.  You may need additional lemmas!
 
   map-length : {A B : Set} → (xs : List A) → (f : A → B) → length (map f xs) ≡ (length xs)
-  map-length xs f = {!!}
+  map-length [] f = refl
+  map-length (x ∷ xs) f = cong succ (map-length xs f)
 
   ⊕-[] : {A : Set} → (xs : List A) → (xs ⊕ []) ≡ xs
-  ⊕-[] xs = {!!}
+  ⊕-[] [] = refl
+  ⊕-[] (x ∷ xs) = cong (_∷_ x) (⊕-[] xs)
 
   ⊕-length : {A : Set} → (xs ys : List A) → length (xs ⊕ ys) ≡ (length xs + length ys)
-  ⊕-length xs ys = {!!}
+  ⊕-length [] ys = refl
+  ⊕-length (x ∷ xs) ys = cong succ (⊕-length xs ys)
 
   -- What about negation?  We can define negation like so:
 
@@ -175,4 +176,4 @@ module E4 where
   -- EXERCISE: try to establish the following:
 
   succ-≢-zero : (m : ℕ) → succ m ≢ zero
-  succ-≢-zero m = ?
+  succ-≢-zero m = λ { () }
