@@ -137,3 +137,5 @@ module E2 where
   length : {A : Set} → List A → ℕ
   length [] = zero
   length (x ∷ xs) = succ (length xs)
+
+-- Good…
