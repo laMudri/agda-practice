@@ -211,7 +211,8 @@ module E5 where
   -- Let's use ∃ to prove something very trivial:
 
   silly-example₁ : (b : Bool) → ∃ λ b′ → (b ∧ b′) ≡ b′
-  silly-example₁ b = {!!}
+  silly-example₁ true = {!!}
+  silly-example₁ false = {!!}
 
   -- Take a look at the goal state above.  We must inhabit `∃ λ b′ → (b ∧ b′) ≡ b′' given `b : Bool'.
   -- We proceed by case analysis on b:
@@ -249,8 +250,8 @@ module E5 where
   -- EXERCISE: complete the following:
 
   ∃-exercise₁ : ∃ λ b → (b ∧ b) ≡ b
-  ∃-exercise₁ = {!!}
+  ∃-exercise₁ = false , refl
 
   -- we can talk about the existence of functions, too!
   ∃-exercise₂ : (b : Bool) → ∃ λ (f : Bool → Bool → Bool) → f b b ≡ b
-  ∃-exercise₂ b = {!!}
+  ∃-exercise₂ b = (λ x y → x) , refl
