@@ -34,13 +34,13 @@ module E3 where
   -- the following series of definition, watch how the proof state evolves:
 
   sym₁ : {A : Set} → {x y : A} → x ≡ y → y ≡ x
-  sym₁ x≡y = {!!}
+  sym₁ refl = refl
 
   -- Use <Ctrl> + <c> + <,> to inspect the proof state above and compare it with the proof state
   -- below:
 
   sym₂ : {A : Set} → {x y : A} → x ≡ y → y ≡ x
-  sym₂ refl = {!!}
+  sym₂ refl = refl
 
   -- Note how Agda now knows that x and y are the same thing by pattern matching on x≡y and
   -- obtaining refl.  We can of course complete the definition of sym by using refl again,
@@ -53,7 +53,7 @@ module E3 where
   -- We have established that _≡_ is reflexive, symmetric (above) and now transitive:
 
   trans : {A : Set} → {x y z : A} → x ≡ y → y ≡ z → x ≡ z
-  trans x≡y y≡z = {!!}
+  trans refl y≡z = y≡z
 
   -- (Do the same trick as above, replacing refl with pattern variables in the arguments, or the
   -- body with a hole, to see how the types evolve).
@@ -63,7 +63,7 @@ module E3 where
   -- like-for-like elements in a given context:
 
   subst : {A : Set} → {x y : A} → (P : A → Set) → x ≡ y → P x → P y
-  subst P x≡y Px = {!!}
+  subst P refl Px = Px
 
   -- (Complete the definition of subst...)
 
@@ -74,7 +74,7 @@ module E3 where
   -- to equal elements:
 
   cong : {A B : Set} → {x y : A} → (f : A → B) → x ≡ y → f x ≡ f y
-  cong f x≡y = {!!}
+  cong f refl = refl
 
   -- (Complete the definition of cong...)
 
