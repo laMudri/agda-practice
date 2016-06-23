@@ -177,3 +177,8 @@ module E4 where
 
   succ-≢-zero : (m : ℕ) → succ m ≢ zero
   succ-≢-zero m = λ { () }
+
+  -- DPM: alternatively you can bring the absurd pattern over to the left-hand side:
+
+  succ-≢-zero′ : (m : ℕ) → succ m ≢ zero
+  succ-≢-zero′ m ()
