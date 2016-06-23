@@ -127,7 +127,8 @@ module E7 where
   -- a look:
   open import Relation.Binary
   -- The definition of Dec, which is also used to define decidability, is in the following module:
-  open import Relation.Nullary.Core
+  open import Relation.Nullary  -- JDW: current stdlib (2.5.1) has no Relation.Nullary.Core.
+                                -- See 3264b9e in agda-stdlib.
   -- This is the empty type, what we previously called 𝟘.  In the Agda standard library, this type
   -- is now called ⊥.  What we also previously called ex-falso is called ⊥-elim.  Both will be
   -- needed below.
@@ -324,22 +325,43 @@ module E7 where
 
   -- Even though there are no inhabitants of ⊥ we can still talk in the abstract as if there were…
   ⊥-Decidable : Decidable (_≡_ {A = ⊥})
-  ⊥-Decidable e f = {!!}
+  ⊥-Decidable () f
 
   -- Note how the contents of Data.Unit is not in scope here as we imported it in a submodule, AssumesDecidability,
   -- above and not at the top level.  We import it again at the top level.
   open import Data.Unit
 
   ⊤-Decidable : Decidable (_≡_ {A = ⊤})
-  ⊤-Decidable u v = {!!}
+  ⊤-Decidable tt tt = yes refl
 
   ℕ-Decidable : Decidable (_≡_ {A = ℕ})
-  ℕ-Decidable m n = {!!}
+  ℕ-Decidable ℕ.zero ℕ.zero = yes refl
+  ℕ-Decidable ℕ.zero (ℕ.suc n) = no (λ ())
+  ℕ-Decidable (ℕ.suc m) ℕ.zero = no (λ ())
+  ℕ-Decidable (ℕ.suc m) (ℕ.suc n) with ℕ-Decidable m n
+  ... | yes p = yes (cong ℕ.suc p)
+  ... | no ¬p = no (¬p ∘ suc-injective)
+    where
+    suc-injective : ∀ {m n} → ℕ.suc m ≡ ℕ.suc n → m ≡ n
+    suc-injective refl = refl
 
   -- A little harder, and requires you to lift a decidability result on elements to a decidability result
   -- on lists of elements…
   List-A-Decidable : {ℓ : Level} → {A : Set ℓ} → (≡-decidable : Decidable (_≡_ {A = A})) → Decidable (_≡_ {A = List A})
-  List-A-Decidable ≡-decidable xs ys = {!!}
+  List-A-Decidable ≡-decidable [] [] = yes refl
+  List-A-Decidable ≡-decidable [] (x ∷ ys) = no (λ ())
+  List-A-Decidable ≡-decidable (x ∷ xs) [] = no (λ ())
+  List-A-Decidable ≡-decidable (x ∷ xs) (y ∷ ys) with ≡-decidable x y
+  List-A-Decidable ≡-decidable (x ∷ xs) (y ∷ ys) | yes x≡y with List-A-Decidable ≡-decidable xs ys
+  List-A-Decidable ≡-decidable (x ∷ xs) (y ∷ ys) | yes x≡y | yes xs≡ys = yes (cong₂ _∷_ x≡y xs≡ys)
+  List-A-Decidable ≡-decidable (x ∷ xs) (y ∷ ys) | yes _ | no ¬p = no (¬p ∘ tails-≡)
+    where
+    tails-≡ : ∀ {ℓ} {A : Set ℓ} {x y : A} {xs ys : List A} → x ∷ xs ≡ y ∷ ys → xs ≡ ys
+    tails-≡ refl = refl
+  List-A-Decidable ≡-decidable (x ∷ xs) (y ∷ ys) | no ¬p = no (¬p ∘ heads-≡)
+    where
+    heads-≡ : ∀ {ℓ} {A : Set ℓ} {x y : A} {xs ys : List A} → x ∷ xs ≡ y ∷ ys → x ≡ y
+    heads-≡ refl = refl
 
   -- How about lifting two such results?
 
@@ -349,4 +371,17 @@ module E7 where
 
   ⊎-A-B-Decidable : {ℓ : Level} → {A B : Set ℓ} → (≡-A-decidable : Decidable (_≡_ {A = A})) →
                       (≡-B-Decidable : Decidable (_≡_ {A = B})) → Decidable (_≡_ {A = A ⊎ B})
-  ⊎-A-B-Decidable ≡-A-decidable ≡-B-decidable u v = {!!}
+  ⊎-A-B-Decidable ≡-A-decidable ≡-B-decidable (inj₁ x) (inj₁ y) with ≡-A-decidable x y
+  ... | yes p = yes (cong inj₁ p)
+  ... | no ¬p = no (¬p ∘ inj₁-injective)
+    where
+    inj₁-injective : ∀ {a b} {A : Set a} {B : Set b} {x y : A} → inj₁ {b = b} {B = B} x ≡ inj₁ y → x ≡ y
+    inj₁-injective refl = refl
+  ⊎-A-B-Decidable ≡-A-decidable ≡-B-decidable (inj₁ _) (inj₂ _) = no (λ ())
+  ⊎-A-B-Decidable ≡-A-decidable ≡-B-decidable (inj₂ _) (inj₁ _) = no (λ ())
+  ⊎-A-B-Decidable ≡-A-decidable ≡-B-decidable (inj₂ x) (inj₂ y) with ≡-B-decidable x y
+  ... | yes p = yes (cong inj₂ p)
+  ... | no ¬p = no (¬p ∘ inj₂-injective)
+    where
+    inj₂-injective : ∀ {a b} {A : Set a} {B : Set b} {x y : B} → inj₂ {a = a} {A = A} x ≡ inj₂ y → x ≡ y
+    inj₂-injective refl = refl
