@@ -140,3 +140,13 @@ module E6 where
   --     (A ⊎ B) → (A → C) → (B → C) → C
   --
   -- Make sure you use _⊔_ and succ to obtain the most general type possible.
+
+  data _⊎_ {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
+    inj₁ : A → A ⊎ B
+    inj₂ : B → A ⊎ B
+
+  ⊎-elim :
+    ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
+    A ⊎ B → (A → C) → (B → C) → C
+  ⊎-elim (inj₁ a) f g = f a
+  ⊎-elim (inj₂ b) f g = g b
