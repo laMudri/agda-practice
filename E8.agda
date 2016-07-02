@@ -68,8 +68,8 @@ module E8 where
   -- EXERCISE: complete the following lemma:
 
   *-zero : (m : ℕ) → m * zero ≡ zero
-  *-zero zero    = {!!}
-  *-zero (suc m) = {!!}
+  *-zero zero    = refl
+  *-zero (suc m) = *-zero m
 
   *-commutative₂ : (m n : ℕ) → m * n ≡ n * m
   *-commutative₂ zero    n = sym (*-zero n)
@@ -78,25 +78,71 @@ module E8 where
   -- EXERCISE: spot the lemma (or multiple lemmas) required to close the second hole above and
   -- complete the proof of *-commutative using rewrite.
 
+  *-suc : (m n : ℕ) → m * suc n ≡ m + m * n
+  *-suc m n = {!!}
+
+  *-commutative : (m n : ℕ) → m * n ≡ n * m
+  *-commutative zero n = sym (*-zero n)
+  *-commutative (suc m) n
+    rewrite
+      *-suc n m | *-commutative m n = refl
+
   -- EXERCISE: complete the following using rewrite.  You may need additional lemmas!  State and
   -- prove them too.
 
   +-associative : (m n o : ℕ) → m + (n + o) ≡ (m + n) + o
-  +-associative m n o = {!!}
+  +-associative zero n o = refl
+  +-associative (suc m) n o
+    rewrite
+      +-associative m n o = refl
 
   *-+-distributiveᵣ : (m n o : ℕ) → m * (n + o) ≡ (m * n) + (m * o)
-  *-+-distributiveᵣ m n o = {!!}
+  *-+-distributiveᵣ zero n o = refl
+  *-+-distributiveᵣ (suc m) n o
+    rewrite *-+-distributiveᵣ m n o
+          | +-associative (n + m * n) o (m * o)
+          | sym (+-associative n (m * n) o)
+          | +-commutative (m * n) o
+          | +-associative n o (m * n)
+          | +-associative (n + o) (m * n) (m * o) = refl
 
   -- Definition of exponentiation on ℕ:
   pow : ℕ → ℕ → ℕ
   pow b zero    = suc zero
   pow b (suc e) = pow b e * b
 
-  zero-pow : (m : ℕ) → pow zero m ≡ zero
-  zero-pow m = {!!}
+  -- pow zero zero = suc zero, so I changed the statement.
+  zero-pow : (m : ℕ) → pow zero (suc m) ≡ zero
+  zero-pow m = *-zero (pow zero m)
+
+  *-+-distributiveₗ : (m n o : ℕ) → (m + n) * o ≡ (m * o) + (n * o)
+  *-+-distributiveₗ m n o
+    rewrite *-commutative (m + n) o
+          | *-+-distributiveᵣ o m n
+          | *-commutative o m
+          | *-commutative o n = refl
+
+  *-associative : (m n o : ℕ) → m * (n * o) ≡ (m * n) * o
+  *-associative zero n o = refl
+  *-associative (suc m) n o
+    rewrite *-+-distributiveₗ n (m * n) o
+          | *-associative m n o = refl
 
   +-pow : (b m n : ℕ) → pow b (m + n) ≡ pow b m * pow b n
-  +-pow b m n = {!!}
+  +-pow b zero n = +-zero (pow b n)
+  +-pow b (suc m) n
+    rewrite +-pow b m n
+          | sym (*-associative (pow b m) b (pow b n))
+          | *-commutative b (pow b n)
+          | *-associative (pow b m) (pow b n) b = refl
 
   *-pow : (b c m : ℕ) → pow b m * pow c m ≡ pow (b * c) m
-  *-pow b c m = {!!}
+  *-pow b c zero = refl
+  *-pow b c (suc m)
+    rewrite *-associative (pow b m * b) (pow c m) c
+          | sym (*-associative (pow b m) b (pow c m))
+          | *-commutative b (pow c m)
+          | sym (*-associative (pow b m) (pow c m * b) c)
+          | sym (*-associative (pow c m) b c)
+          | *-associative (pow b m) (pow c m) (b * c)
+          | *-pow b c m = refl
