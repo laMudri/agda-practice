@@ -113,7 +113,7 @@ module E9 where
   -- expansion.  EXERCISE: Try it yourself:
 
   one-one-one : Point
-  one-one-one = {!!}
+  one-one-one = record { x = 1 ; y = 1 ; z = 1 }
 
   -- So, what are records?  Records are Σ-types that are built in to the Agda language itself, albeit with
   -- one key difference, namely the entries are given an explicit name that we can refer to, rather than a
@@ -221,7 +221,7 @@ module E9 where
   --
   -- The types
   --
-  --     (ℓ : Level} → Set ℓ → Set ℓ
+  --     (ℓ : Level) → Set ℓ → Set ℓ
   --
   -- and
   --
@@ -319,24 +319,57 @@ module E9 where
   -- EXERCISE: complete the following:
 
   zero-+-IsLeftIdentity : IsLeftIdentity ℕ.zero _+_
-  zero-+-IsLeftIdentity = {!!}
+  zero-+-IsLeftIdentity f = refl
 
   zero-+-IsRightIdentity : IsRightIdentity ℕ.zero _+_
-  zero-+-IsRightIdentity = {!!}
+  zero-+-IsRightIdentity ℕ.zero = refl
+  zero-+-IsRightIdentity (ℕ.suc e) = cong ℕ.suc (zero-+-IsRightIdentity e)
 
   +-IsAssociative : IsAssociative _+_
-  +-IsAssociative = {!!}
+  +-IsAssociative ℕ.zero f g = refl
+  +-IsAssociative (ℕ.suc e) f g = cong ℕ.suc (+-IsAssociative e f g)
 
   ℕ-zero-+-IsMonoid : IsMonoid ℕ.zero _+_
   ℕ-zero-+-IsMonoid = record { ε-identityₗ = zero-+-IsLeftIdentity ; ε-identityᵣ = zero-+-IsRightIdentity ; •-associative = +-IsAssociative }
 
   ℕ-zero-+-Monoid : ∀ {ℓ′} → Monoid {ℓ′ = ℓ′}
-  ℕ-zero-+-Monoid = record { Carrier = ℕ ; _•_ = {!!} ; ε = {!!} ; is-monoid = {!!} }
+  ℕ-zero-+-Monoid = record { Carrier = ℕ ; _•_ = _+_ ; ε = ℕ.zero ; is-monoid = ℕ-zero-+-IsMonoid }
 
   -- Great, so we now know that there exists at least one inhabitant of the Monoid type (in fact, List along with _++_ and []
   -- also form a monoid, as does ℕ along with _*_ and 1, and perhaps you'd like to demonstrate that fact by creating two
   -- more inhabitants of Monoid below), what can we do with it?
-  --
+
+  one-*-IsLeftIdentity : IsLeftIdentity (ℕ.suc ℕ.zero) _*_
+  one-*-IsLeftIdentity f = zero-+-IsRightIdentity f
+
+  one-*-IsRightIdentity : IsRightIdentity (ℕ.suc ℕ.zero) _*_
+  one-*-IsRightIdentity ℕ.zero = refl
+  one-*-IsRightIdentity (ℕ.suc e) = cong ℕ.suc (one-*-IsRightIdentity e)
+
+  +-*-distrib : ∀ x y z → (x + y) * z ≡ x * z + y * z
+  +-*-distrib ℕ.zero y z = refl
+  +-*-distrib (ℕ.suc x) y z rewrite sym (+-IsAssociative z (x * z) (y * z)) =
+    cong (_+_ z) (+-*-distrib x y z)
+
+  *-IsAssociative : IsAssociative _*_
+  *-IsAssociative ℕ.zero f g = refl
+  *-IsAssociative (ℕ.suc e) f g
+    rewrite +-*-distrib f (e * f) g
+          | *-IsAssociative e f g = refl
+
+  ℕ-one-*-IsMonoid : IsMonoid (ℕ.suc ℕ.zero) _*_
+  ℕ-one-*-IsMonoid = record { ε-identityₗ = one-*-IsLeftIdentity
+                            ; ε-identityᵣ = one-*-IsRightIdentity
+                            ; •-associative = *-IsAssociative
+                            }
+
+  ℕ-one-*-Monoid : ∀ {ℓ′} → Monoid {ℓ′ = ℓ′}
+  ℕ-one-*-Monoid = record { Carrier = ℕ
+                          ; _•_ = _*_
+                          ; ε = ℕ.suc ℕ.zero
+                          ; is-monoid = ℕ-one-*-IsMonoid
+                          }
+
   -- Recall (or perhaps, be made aware), that we can make some very general definitions using monoids.  We can interpret
   -- _•_ as being a multiplication, and define a general version of exponentiation, that works for all monoids.  Similarly,
   -- we could interpret _•_ as some accumulation function and derive a general notion of fold over lists, that works for
@@ -361,7 +394,9 @@ module E9 where
     -- EXERCISE: complete the following:
 
     ++-fold : ∀ xs ys → fold (xs ++ ys) ≡ fold xs • fold ys
-    ++-fold xs ys = {!!}
+    ++-fold [] ys = sym (ε-identityₗ _)
+    ++-fold (x ∷ xs) ys rewrite ++-fold xs ys =
+      •-associative x (fold xs) (fold ys)
 
     -- Remember, you have access to all of the proofs such as ε-identityᵣ…
 
@@ -375,15 +410,20 @@ module E9 where
     -- EXERCISE: complete the following:
 
     exp-+ : ∀ e m n → exp e (m + n) ≡ exp e m • exp e n
-    exp-+ e m n = {!!}
+    exp-+ e ℕ.zero n = sym (ε-identityₗ _)
+    exp-+ e (ℕ.suc m) n rewrite exp-+ e m n = •-associative e _ _
 
     ε-exp : ∀ m → exp ε m ≡ ε
-    ε-exp m = {!!}
+    ε-exp ℕ.zero = refl
+    ε-exp (ℕ.suc m) rewrite ε-identityₗ (exp ε m) = ε-exp m
 
     -- Perhaps there's some other properties you can spot about these functions and prove.  Most of the
     -- laws of exponents hold, in a more general form, for the `exp' function, though one, interestingly, requires
     -- commutativity of _•_, which isn't true in general for plain monoids.  We'll discuss this in the next
     -- exercise.
+
+    exp-one : ∀ e → exp e 1 ≡ e
+    exp-one e = ε-identityᵣ e
 
   -- Let's test our general folds and exponentiation:
 
