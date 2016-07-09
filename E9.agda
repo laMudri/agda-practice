@@ -492,9 +492,9 @@ module E9 where
     ∘-IsAssociative e f g = funext (λ x → refl)
 
     →-id-∘-IsMonoid : ∀ {ℓ} {A : Set ℓ} → IsMonoid {A = A → A} id _∘′_
-    →-id-∘-IsMonoid = record { ε-identityₗ = {!!}
-                             ; ε-identityᵣ = {!!}
-                             ; •-associative = {!!}
+    →-id-∘-IsMonoid = record { ε-identityₗ = id-∘-IsLeftIdentity
+                             ; ε-identityᵣ = id-∘-IsRightIdentity
+                             ; •-associative = ∘-IsAssociative
                              }
 
     →-id-∘-Monoid : ∀ {ℓ ℓ′} (A : Set ℓ) → Monoid {ℓ = ℓ} {ℓ′ = ℓ′}
