@@ -339,37 +339,6 @@ module E9 where
   -- also form a monoid, as does ℕ along with _*_ and 1, and perhaps you'd like to demonstrate that fact by creating two
   -- more inhabitants of Monoid below), what can we do with it?
 
-  one-*-IsLeftIdentity : IsLeftIdentity (ℕ.suc ℕ.zero) _*_
-  one-*-IsLeftIdentity f = zero-+-IsRightIdentity f
-
-  one-*-IsRightIdentity : IsRightIdentity (ℕ.suc ℕ.zero) _*_
-  one-*-IsRightIdentity ℕ.zero = refl
-  one-*-IsRightIdentity (ℕ.suc e) = cong ℕ.suc (one-*-IsRightIdentity e)
-
-  +-*-distrib : ∀ x y z → (x + y) * z ≡ x * z + y * z
-  +-*-distrib ℕ.zero y z = refl
-  +-*-distrib (ℕ.suc x) y z rewrite sym (+-IsAssociative z (x * z) (y * z)) =
-    cong (_+_ z) (+-*-distrib x y z)
-
-  *-IsAssociative : IsAssociative _*_
-  *-IsAssociative ℕ.zero f g = refl
-  *-IsAssociative (ℕ.suc e) f g
-    rewrite +-*-distrib f (e * f) g
-          | *-IsAssociative e f g = refl
-
-  ℕ-one-*-IsMonoid : IsMonoid (ℕ.suc ℕ.zero) _*_
-  ℕ-one-*-IsMonoid = record { ε-identityₗ = one-*-IsLeftIdentity
-                            ; ε-identityᵣ = one-*-IsRightIdentity
-                            ; •-associative = *-IsAssociative
-                            }
-
-  ℕ-one-*-Monoid : ∀ {ℓ′} → Monoid {ℓ′ = ℓ′}
-  ℕ-one-*-Monoid = record { Carrier = ℕ
-                          ; _•_ = _*_
-                          ; ε = ℕ.suc ℕ.zero
-                          ; is-monoid = ℕ-one-*-IsMonoid
-                          }
-
   -- Recall (or perhaps, be made aware), that we can make some very general definitions using monoids.  We can interpret
   -- _•_ as being a multiplication, and define a general version of exponentiation, that works for all monoids.  Similarly,
   -- we could interpret _•_ as some accumulation function and derive a general notion of fold over lists, that works for
@@ -447,3 +416,90 @@ module E9 where
   -- provided a concrete implementation of the ⟨List, _++_, []⟩ monoid, as suggested above, then fold is akin to
   -- concatenating a list of lists (i.e. it is the familiar `flatten' operation on lists), whilst exp is akin to
   -- appending a list to itself a given number of times (i.e. replicating a list n-times).
+
+  []-++-IsLeftIdentity : ∀ {ℓ} {A : Set ℓ} → IsLeftIdentity {A = List A} [] _++_
+  []-++-IsLeftIdentity f = refl
+
+  []-++-IsRightIdentity :
+    ∀ {ℓ} {A : Set ℓ} → IsRightIdentity {A = List A} [] _++_
+  []-++-IsRightIdentity [] = refl
+  []-++-IsRightIdentity (x ∷ e) = cong (_∷_ x) ([]-++-IsRightIdentity e)
+
+  ++-IsAssociative : ∀ {ℓ} {A : Set ℓ} →  IsAssociative {A = List A} _++_
+  ++-IsAssociative [] f g = refl
+  ++-IsAssociative (x ∷ e) f g = cong (_∷_ x) (++-IsAssociative e f g)
+
+  List-IsMonoid : ∀ {ℓ} {A : Set ℓ} → IsMonoid {A = List A} [] _++_
+  List-IsMonoid = record { ε-identityₗ = []-++-IsLeftIdentity
+                         ; ε-identityᵣ = []-++-IsRightIdentity
+                         ; •-associative = ++-IsAssociative
+                         }
+
+  List-Monoid : ∀ {ℓ ℓ′} (A : Set ℓ) → Monoid {ℓ = ℓ} {ℓ′ = ℓ′}
+  List-Monoid A = record { Carrier = List A
+                         ; _•_ = _++_
+                         ; ε = []
+                         ; is-monoid = List-IsMonoid {A = A}
+                         }
+
+  one-*-IsLeftIdentity : IsLeftIdentity (ℕ.suc ℕ.zero) _*_
+  one-*-IsLeftIdentity f = zero-+-IsRightIdentity f
+
+  one-*-IsRightIdentity : IsRightIdentity (ℕ.suc ℕ.zero) _*_
+  one-*-IsRightIdentity ℕ.zero = refl
+  one-*-IsRightIdentity (ℕ.suc e) = cong ℕ.suc (one-*-IsRightIdentity e)
+
+  +-*-distrib : ∀ x y z → (x + y) * z ≡ x * z + y * z
+  +-*-distrib ℕ.zero y z = refl
+  +-*-distrib (ℕ.suc x) y z rewrite sym (+-IsAssociative z (x * z) (y * z)) =
+    cong (_+_ z) (+-*-distrib x y z)
+
+  *-IsAssociative : IsAssociative _*_
+  *-IsAssociative ℕ.zero f g = refl
+  *-IsAssociative (ℕ.suc e) f g
+    rewrite +-*-distrib f (e * f) g
+          | *-IsAssociative e f g = refl
+
+  ℕ-one-*-IsMonoid : IsMonoid (ℕ.suc ℕ.zero) _*_
+  ℕ-one-*-IsMonoid = record { ε-identityₗ = one-*-IsLeftIdentity
+                            ; ε-identityᵣ = one-*-IsRightIdentity
+                            ; •-associative = *-IsAssociative
+                            }
+
+  ℕ-one-*-Monoid : ∀ {ℓ′} → Monoid {ℓ′ = ℓ′}
+  ℕ-one-*-Monoid = record { Carrier = ℕ
+                          ; _•_ = _*_
+                          ; ε = ℕ.suc ℕ.zero
+                          ; is-monoid = ℕ-one-*-IsMonoid
+                          }
+
+  module UsingFunExt where
+    open import Function
+
+    postulate
+      funext :
+        ∀ {a b} {A : Set a} {B : A → Set b} {f g : ∀ x → B x} →
+        (∀ x → f x ≡ g x) → f ≡ g
+
+    id-∘-IsLeftIdentity : ∀ {ℓ} {A : Set ℓ} → IsLeftIdentity {A = A → A} id _∘′_
+    id-∘-IsLeftIdentity f = funext (λ x → refl)
+
+    id-∘-IsRightIdentity :
+      ∀ {ℓ} {A : Set ℓ} → IsRightIdentity {A = A → A} id _∘′_
+    id-∘-IsRightIdentity e = funext (λ x → refl)
+
+    ∘-IsAssociative : ∀ {ℓ} {A : Set ℓ} → IsAssociative {A = A → A} _∘′_
+    ∘-IsAssociative e f g = funext (λ x → refl)
+
+    →-id-∘-IsMonoid : ∀ {ℓ} {A : Set ℓ} → IsMonoid {A = A → A} id _∘′_
+    →-id-∘-IsMonoid = record { ε-identityₗ = {!!}
+                             ; ε-identityᵣ = {!!}
+                             ; •-associative = {!!}
+                             }
+
+    →-id-∘-Monoid : ∀ {ℓ ℓ′} (A : Set ℓ) → Monoid {ℓ = ℓ} {ℓ′ = ℓ′}
+    →-id-∘-Monoid A = record { Carrier = A → A
+                             ; _•_ = _∘′_
+                             ; ε = id
+                             ; is-monoid = →-id-∘-IsMonoid
+                             }
