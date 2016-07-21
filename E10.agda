@@ -80,37 +80,26 @@ module E10 where
       Carrier : Set ℓ
       _•_     : BinOp Carrier
 
-  -- A Magma has no laws associated with it.  It is pretty useless.  We will jump straight back to
-  -- something more interesting, with Monoid again:
+  record IsSemigroup {ℓ} {A : Set ℓ} (_•_ : BinOp A) : Set ℓ where
+    field
+      •-associative : IsAssociative _•_
+
+  record Semigroup {ℓ ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
+    field
+      Carrier      : Set ℓ
+      _•_          : BinOp Carrier
+      is-semigroup : IsSemigroup _•_
+
+    open IsSemigroup is-semigroup public
+
+    magma : Magma {ℓ} {ℓ′}
+    magma = record { Carrier = Carrier ; _•_ = _•_ }
 
   record IsMonoid {ℓ} {A : Set ℓ} (ε : A) (_•_ : BinOp A) : Set ℓ where
     field
       ε-left-identity  : IsLeftIdentity ε _•_
       ε-right-identity : IsRightIdentity ε _•_
-      •-associative    : IsAssociative _•_
-
-  record Monoid₁ {ℓ ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
-    field
-      Carrier   : Set ℓ
-      ε         : Carrier
-      _•_       : BinOp Carrier
-      is-monoid : IsMonoid ε _•_
-
-    open IsMonoid is-monoid public
-
-  -- The record Monoid₁ is the same definition as the final Monoid record from the previous exercise
-  -- tutorial.  How can we obtain a magma from a monoid, using these definitions?  One way would be
-  -- to write a function like:
-
-  monoidToMagma : ∀ {ℓ ℓ′} → Monoid₁ {ℓ} {ℓ′} → Magma {ℓ} {ℓ′}
-  monoidToMagma mon = record { Carrier = Carrier ; _•_ = _•_ }
-    where
-      -- We can locally open a module/record for the sake of defining a function using a `where'
-      -- clause.
-      open Monoid₁ mon public
-
-  -- This will work (of course --- it's plainly obvious it will work by inspection), but is a bit
-  -- clumsy.  Another, better way is to do the following:
+      is-semigroup     : IsSemigroup _•_
 
   record Monoid {ℓ ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
     field
@@ -121,8 +110,10 @@ module E10 where
 
     open IsMonoid is-monoid public
 
-    magma : Magma {ℓ} {ℓ′}
-    magma = record { Carrier = Carrier ; _•_ = _•_ }
+    semigroup : Semigroup {ℓ} {ℓ′}
+    semigroup = record { Carrier = Carrier ; _•_ = _•_ ; is-semigroup = is-semigroup }
+
+    open Semigroup semigroup using (magma) public
 
   -- This adds an element of type Magma to the Monoid record.  Typing
   --
@@ -162,12 +153,7 @@ module E10 where
     monoid : Monoid {ℓ} {ℓ′}
     monoid = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; is-monoid = is-monoid }
 
-    -- The `is-monoid' value comes from the IsCommutativeMonoid record.
-    --
-    -- We use the projection from monoid to magma already defined in the Monoid record to obtain a magma:
-
-    magma : Magma {ℓ} {ℓ′}
-    magma = Monoid.magma monoid
+    open Monoid monoid using (magma; semigroup) public
 
   -- Let's now extend monoid in a different direction, by adding inverse elements to form groups:
 
@@ -198,8 +184,7 @@ module E10 where
     monoid : Monoid {ℓ} {ℓ′}
     monoid = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; is-monoid = is-monoid }
 
-    magma : Magma {ℓ} {ℓ′}
-    magma = Monoid.magma monoid
+    open Monoid monoid using (magma; semigroup) public
 
   -- Now our hierarchy looks like this:
   --
@@ -250,16 +235,12 @@ module E10 where
     group : Group {ℓ} {ℓ′}
     group = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; inv = inv ; is-group = is-group }
 
+    open Group group using (magma; semigroup; monoid) public
+
     -- Note the double expansion below:
 
     commutativeMonoid : CommutativeMonoid {ℓ} {ℓ′}
     commutativeMonoid = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; is-commutative-monoid = record { •-commutative = •-commutative ; is-monoid = is-monoid } }
-
-    monoid : Monoid {ℓ} {ℓ′}
-    monoid = Group.monoid group
-
-    magma : Magma {ℓ} {ℓ′}
-    magma = Group.magma group
 
   -- Let's give some instances:
 
@@ -292,7 +273,9 @@ module E10 where
         is-monoid = record {
           ε-left-identity = λ f → refl ;
           ε-right-identity = zero-+ ;
-          •-associative = +-associative
+          is-semigroup = record {
+            •-associative = +-associative
+          }
         }
       }
     }
