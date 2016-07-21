@@ -329,3 +329,91 @@ module E10 where
   -- but below Monoid, changing the types of the rest of the hierarchy as is necessary for this to work.
   -- Second: add the following structures: IdempotentMonoid, IdempotentGroup and
   -- CommutativeIdempotentGroup again changing whatever is necessary to get this to work.
+
+  IsIdempotent : ∀ {ℓ} {A : Set ℓ} → BinOp A → Set ℓ
+  IsIdempotent _•_ = ∀ a → a • a ≡ a
+
+  record IsIdempotentMonoid {ℓ} {A : Set ℓ} (ε : A) (_•_ : BinOp A) : Set ℓ where
+    field
+      •-idempotent : IsIdempotent _•_
+      is-monoid    : IsMonoid ε _•_
+
+    open IsMonoid is-monoid public
+
+  record IdempotentMonoid {ℓ} {ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
+    field
+      Carrier              : Set ℓ
+      ε                    : Carrier
+      _•_                  : BinOp Carrier
+      is-idempotent-monoid : IsIdempotentMonoid ε _•_
+
+    open IsIdempotentMonoid is-idempotent-monoid public
+
+    monoid : Monoid {ℓ} {ℓ′}
+    monoid = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; is-monoid = is-monoid }
+
+    open Monoid monoid using (magma; semigroup) public
+
+  record IsIdempotentGroup {ℓ} {A : Set ℓ} (ε : A) (_•_ : BinOp A) (inv : A → A) : Set ℓ where
+    field
+      •-idempotent : IsIdempotent _•_
+      is-group     : IsGroup ε _•_ inv
+
+    open IsGroup is-group public
+
+  record IdempotentGroup {ℓ} {ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
+    field
+      Carrier             : Set ℓ
+      ε                   : Carrier
+      _•_                 : BinOp Carrier
+      inv                 : Carrier → Carrier
+      is-idempotent-group : IsIdempotentGroup ε _•_ inv
+
+    open IsIdempotentGroup is-idempotent-group public
+
+    group : Group {ℓ} {ℓ′}
+    group = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; inv = inv ; is-group = is-group }
+
+    open Group group using (magma; semigroup; monoid) public
+
+    idempotentMonoid : IdempotentMonoid {ℓ} {ℓ′}
+    idempotentMonoid = record { Carrier = Carrier ; ε = ε ; _•_ = _•_ ; is-idempotent-monoid = record { •-idempotent = •-idempotent ; is-monoid = is-monoid } }
+
+  record IsCommutativeIdempotentGroup {ℓ} {A : Set ℓ} (ε : A) (_•_ : BinOp A) (inv : A → A) : Set ℓ where
+    field
+      •-idempotent         : IsIdempotent _•_
+      is-commutative-group : IsCommutativeGroup ε _•_ inv
+
+    open IsCommutativeGroup is-commutative-group public
+
+  record CommutativeIdempotentGroup {ℓ} {ℓ′} : Set (ℓsuc (ℓ ℓ⊔ ℓ′)) where
+    field
+      Carrier                         : Set ℓ
+      ε                               : Carrier
+      _•_                             : BinOp Carrier
+      inv                             : Carrier → Carrier
+      is-commutative-idempotent-group : IsCommutativeIdempotentGroup ε _•_ inv
+
+    open IsCommutativeIdempotentGroup is-commutative-idempotent-group public
+
+    commutativeGroup : CommutativeGroup {ℓ} {ℓ′}
+    commutativeGroup = record
+                         { Carrier = Carrier
+                         ; ε = ε
+                         ; _•_ = _•_
+                         ; inv = inv
+                         ; is-commutative-group = is-commutative-group
+                         }
+
+    open CommutativeGroup commutativeGroup using (magma; semigroup; monoid; group; commutativeMonoid)
+
+    idempotentGroup : IdempotentGroup {ℓ} {ℓ′}
+    idempotentGroup = record
+                        { Carrier = Carrier
+                        ; ε = ε
+                        ; _•_ = _•_
+                        ; inv = inv
+                        ; is-idempotent-group = record { •-idempotent = •-idempotent ; is-group = is-group }
+                        }
+
+    open IdempotentGroup idempotentGroup using (idempotentMonoid) public
