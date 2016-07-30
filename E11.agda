@@ -4,7 +4,7 @@ module E11 where
 
   open import Data.Sum
 
-  open import Relation.Binary.PropositionalEquality
+  open import Relation.Binary.PropositionalEquality renaming (setoid to ≡-setoid)
 
   -- In this module we will develop the theory of ordered sets.  Ordered sets again form
   -- a hierarchy, like the algebraic structures of exercise 10.  We have:
@@ -39,13 +39,82 @@ module E11 where
   IsTotal _R_ = ∀ x y → x R y ⊎ y R x
 
   -- Define the following records:
-  --
+
+  open import Function
+
   -- IsPreOrder and PreOrder
-  --
+
+  record IsPreOrder {ℓ} {A : Set ℓ} (_≤_ : Rel₂ A) : Set ℓ where
+    field
+      ≤-reflexive : IsReflexive _≤_
+      ≤-transitive : IsTransitive _≤_
+
+  record PreOrder {ℓ ℓ′} : Set (suc (ℓ ⊔ ℓ′)) where
+    field
+      Carrier : Set ℓ
+      _≤_ : Rel₂ Carrier
+      is-pre-order : IsPreOrder _≤_
+
+    open IsPreOrder is-pre-order public
+
   -- IsPartialOrder and PartialOrder
-  --
+
+  record IsPartialOrder {ℓ} {A : Set ℓ} (_≤_ : Rel₂ A) : Set ℓ where
+    field
+      ≤-antiSymmetric : IsAntiSymmetric _≤_
+      is-pre-order : IsPreOrder _≤_
+
+  record PartialOrder {ℓ} {ℓ′} : Set (suc (ℓ ⊔ ℓ′)) where
+    field
+      Carrier : Set ℓ
+      _≤_ : Rel₂ Carrier
+      is-partial-order : IsPartialOrder _≤_
+
+    open IsPartialOrder is-partial-order public
+
+    preOrder : PreOrder {ℓ} {ℓ′}
+    preOrder = record { Carrier = Carrier
+                      ; _≤_ = _≤_
+                      ; is-pre-order = is-pre-order
+                      }
+
   -- IsTotalOrder and TotalOrder
-  --
+
+  record IsTotalOrder {ℓ} {A : Set ℓ} (_≤_ : Rel₂ A) : Set ℓ where
+    field
+      ≤-transitive : IsTransitive _≤_
+      ≤-antiSymmetric : IsAntiSymmetric _≤_
+      ≤-total : IsTotal _≤_
+
+  record TotalOrder {ℓ} {ℓ′} : Set (suc (ℓ ⊔ ℓ′)) where
+    field
+      Carrier : Set ℓ
+      _≤_ : Rel₂ Carrier
+      is-total-order : IsTotalOrder _≤_
+
+    open IsTotalOrder is-total-order public
+
+    partialOrder : PartialOrder {ℓ} {ℓ′}
+    partialOrder =
+      record { Carrier = Carrier
+             ; _≤_ = _≤_
+             ; is-partial-order =
+               record { ≤-antiSymmetric = ≤-antiSymmetric
+                      ; is-pre-order =
+                        record { ≤-reflexive = ≤-reflexive
+                               ; ≤-transitive = ≤-transitive
+                               }
+                      }
+             }
+      where
+      ≤-reflexive : IsReflexive _≤_
+      ≤-reflexive x = case ≤-total x x of λ
+        { (inj₁ p) → p
+        ; (inj₂ p) → p
+        }
+
+    open PartialOrder partialOrder using (preOrder) public
+
   -- EXERCISE: complete the above.  Use whatever modules from the standard library (barring
   -- the existing implementations of these concepts) that you feel are necessary.  Follow the
   -- same pattern as in exercise 10: for each module M′ that sits above modules M₁ … Mₙ in the
@@ -70,6 +139,20 @@ module E11 where
   --
   -- IsSetoid and Setoid
 
+  record IsSetoid {ℓ} {A : Set ℓ} (_≈_ : Rel₂ A) : Set ℓ where
+    field
+      ≈-reflexive : IsReflexive _≈_
+      ≈-symmetric : IsSymmetric _≈_
+      ≈-transitive : IsTransitive _≈_
+
+  record Setoid {ℓ ℓ′} : Set (suc (ℓ ⊔ ℓ′)) where
+    field
+      Carrier : Set ℓ
+      _≈_ : Rel₂ Carrier
+      is-setoid : IsSetoid _≈_
+
+    open IsSetoid is-setoid public
+
   -- EXERCISE: complete the above.  Use whatever modules from the standard library (barring
   -- existing implementations of this concept) that you feel necessary.
 
@@ -83,3 +166,18 @@ module E11 where
   --
   -- EXERCISE: complete the above.  Use whatever modules from the standard library that you
   -- feel necessary.
+
+  module AssumingPreOrder {ℓ ℓ′} (P : PreOrder {ℓ} {ℓ′}) where
+    open PreOrder P
+    open import Data.Product using (_×_; _,_; swap)
+
+    setoid : Setoid {ℓ} {ℓ′}
+    setoid = record
+      { Carrier = Carrier
+      ; _≈_ = λ x y → x ≤ y × y ≤ x
+      ; is-setoid = record
+        { ≈-reflexive = λ x → ≤-reflexive x , ≤-reflexive x
+        ; ≈-symmetric = λ x y p → swap p
+        ; ≈-transitive = λ { x y z (xy , yx) (yz , zy) → ≤-transitive _ _ _ xy yz , {!≤-transitive _ _ _ zy yx!} }
+        }
+      }
