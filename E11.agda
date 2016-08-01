@@ -178,6 +178,8 @@ module E11 where
       ; is-setoid = record
         { ≈-reflexive = λ x → ≤-reflexive x , ≤-reflexive x
         ; ≈-symmetric = λ x y p → swap p
-        ; ≈-transitive = λ { x y z (xy , yx) (yz , zy) → ≤-transitive _ _ _ xy yz , {!≤-transitive _ _ _ zy yx!} }
+        ; ≈-transitive =
+          λ { x y z (xy , yx) (yz , zy) →
+            ≤-transitive _ _ _ xy yz , ≤-transitive _ _ _ zy yx }
         }
       }
