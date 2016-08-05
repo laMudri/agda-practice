@@ -91,10 +91,10 @@ n-divides-n n = div 1 (begin
 ≤-minus {y = y} z≤n = y
 ≤-minus (s≤s x≤y) = ≤-minus x≤y
 
-_/suc_ : ℕ → ℕ → ℕ
-m /suc n with suc n ≤? m
-m /suc n | yes sucn≤m = {!≤-minus sucn≤m /suc n!}
-m /suc n | no _ = zero
+--_/suc_ : ℕ → ℕ → ℕ
+--m /suc n with suc n ≤? m
+--m /suc n | yes sucn≤m = {!≤-minus sucn≤m /suc n!}
+--m /suc n | no _ = zero
 -- The totality checker fails because it can't establish that `≤-minus sucn≤m`
 -- is structurally smaller than `m`. We could deduce that `≤-minus sucn≤m` is
 -- numerically less than `m`, but we'd still need to do some work to get this
