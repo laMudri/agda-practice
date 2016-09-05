@@ -350,3 +350,28 @@ seq→nd (cut {ps} q {r} ptq qtr) =
         - seq→nd qtr
     ∣ ps ⊢ q
       - seq→nd ptq
+
+-- Very good!  Now a term assignment from ND for the λ-calculus?  Here's a trick you may like to consider:
+
+open import Data.Fin
+open import Data.Vec
+
+data Type : Set where
+  ι    : Type
+  _⇨_ : Type → Type → Type
+
+data LambdaTerm : ℕ → Set where
+  ↑ : ∀ {m} → Fin m → LambdaTerm m
+  ƛ : ∀ {m} → Type → LambdaTerm (Data.Nat.suc m) → LambdaTerm m
+  _·_ : ∀ {m} → LambdaTerm m → LambdaTerm m → LambdaTerm m
+
+Ctxt : ℕ → Set
+Ctxt m = Vec Type m
+
+data _⊢_∈_ : ∀ {m} → Ctxt m → LambdaTerm m → Type → Set where
+  var : ∀ {m} {Γ : Ctxt m} {v} → Γ ⊢ ↑ v ∈ lookup v Γ
+  app : ∀ {m} {Γ : Ctxt m} {l r : LambdaTerm m} {τ τ′} → Γ ⊢ l ∈ (τ ⇨ τ′) → Γ ⊢ r ∈ τ → Γ ⊢ l · r ∈ τ′
+  abs : ∀ {m} {Γ : Ctxt m} {b : LambdaTerm (Data.Nat.suc m)} {τ τ′} → (τ ∷ Γ) ⊢ b ∈ τ′ → Γ ⊢ (ƛ τ b) ∈ (τ ⇨ τ′)
+
+test : Set
+test = Data.Vec.[ ι ] ⊢ ƛ ι (↑ (Fin.suc Fin.zero) ) ∈ (ι ⇨ ι)
