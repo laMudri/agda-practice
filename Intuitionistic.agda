@@ -496,6 +496,8 @@ substitute-correct sub (j ·t hj) =
 substitute-correct sub (ƛt {τ = τ} j) =
   ƛt (substitute-correct (τ ∷-⊆ sub) j)
 
+-- Theorem 3:
+-- Each natural deduction proof has a corresponding well-typed λ-calculus term.
 extract-correct :
   ∀ {A} {Γ : List (Syntax A)} {p} (t : Γ ⊢ p) → Γ ⊢ extract t ∈ p
 extract-correct var = ↑t (here refl)
@@ -513,3 +515,71 @@ extract-correct (∧er t) = sndt (extract-correct t)
 extract-correct (→i t) = ƛt (extract-correct t)
 extract-correct (→e t ht) = extract-correct t ·t extract-correct ht
 extract-correct (weaken sub t) = substitute-correct sub (extract-correct t)
+
+-- Theorem 4:
+-- Each well-typed λ-calculus term gives a corresponding natural deduction
+-- proof.
+compile : ∀ {A} {Γ : List (Syntax A)} {l τ} → Γ ⊢ l ∈ τ → Γ ⊢ τ
+compile {Γ = Γ} {↑ _} {τ} (↑t v) =
+  ∣ Γ ⊢ τ
+    > weaken {!singleton-⊆ v!}
+    ∣ [ τ ] ⊢ τ
+      - var
+compile {Γ = Γ} {void-elim l} {τ} (void-elimt t) =
+  ∣ Γ ⊢ τ
+    > ⊥e
+    ∣ Γ ⊢ ⊥s
+      - compile t
+compile {Γ = Γ} {unit} {⊤s} unitt =
+  ∣ Γ ⊢ ⊤s
+    > weaken (λ ())
+    ∣ [] ⊢ ⊤s
+      - ⊤i
+compile {Γ = Γ} {inl l} {τ ∨s τ′} (inlt t) =
+  ∣ Γ ⊢ τ ∨s τ′
+    > ∨il
+    ∣ Γ ⊢ τ
+      - compile t
+compile {Γ = Γ} {inr l} {τ ∨s τ′} (inrt t) =
+  ∣ Γ ⊢ τ ∨s τ′
+    > ∨ir
+    ∣ Γ ⊢ τ′
+      - compile t
+compile {Γ = Γ} {case cl of τ ⇒ ll or τ′ ⇒ rl} {ρ} (caset ct of lt or rt) =
+  ∣ Γ ⊢ ρ
+    >>> ∨e
+    ∣ τ ∷ Γ ⊢ ρ
+      - compile lt
+    ∣ τ′ ∷ Γ ⊢ ρ
+      - compile rt
+    ∣ Γ ⊢ τ ∨s τ′
+      - compile ct
+compile {Γ = Γ} {ll ,, rl} {τ ∧s τ′} (lt ,,t rt) =
+  ∣ Γ ⊢ τ ∧s τ′
+    >> ∧i
+    ∣ Γ ⊢ τ
+      - compile lt
+    ∣ Γ ⊢ τ′
+      - compile rt
+compile {Γ = Γ} {fst l} {τ} (fstt {τ′ = τ′} t) =
+  ∣ Γ ⊢ τ
+    > ∧el
+    ∣ Γ ⊢ τ ∧s τ′
+      - compile t
+compile {Γ = Γ} {snd l} {τ′} (sndt {τ = τ} t) =
+  ∣ Γ ⊢ τ′
+    > ∧er
+    ∣ Γ ⊢ τ ∧s τ′
+      - compile t
+compile {Γ = Γ} {fl · xl} {τ′} (_·t_ {τ = τ} ft xt) =
+  ∣ Γ ⊢ τ′
+    >> →e
+    ∣ Γ ⊢ τ →s τ′
+      - compile ft
+    ∣ Γ ⊢ τ
+      - compile xt
+compile {Γ = Γ} {ƛ .τ l} {τ →s τ′} (ƛt t) =
+  ∣ Γ ⊢ τ →s τ′
+    > →i
+    ∣ τ ∷ Γ ⊢ τ′
+      - compile t
